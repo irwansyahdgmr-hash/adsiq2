@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AdsIQ — AI Ads Analyzer untuk Indonesia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ink: #0d0d0d;
+      --paper: #f5f0e8;
+      --paper2: #ede8df;
+      --paper3: #e4ddd2;
+      --accent: #ff4500;
+      --accent2: #ff8c00;
+      --green: #1a7a4a;
+      --green-bg: #e8f5ee;
+      --red: #c0392b;
+      --red-bg: #fdecea;
+      --gold: #b8860b;
+      --gold-bg: #fef9e7;
+      --border: #d4cdc3;
+      --muted: #8a8278;
+      --font-display: 'Cabinet Grotesk', sans-serif;
+      --font-serif: 'Instrument Serif', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* NOISE TEXTURE */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: 0.5;
+    }
+
+    /* HEADER */
+    header {
+      border-bottom: 2px solid var(--ink);
+      padding: 0 40px;
+      background: var(--paper);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-weight: 900; font-size: 1.5rem;
+      letter-spacing: -0.04em; color: var(--ink);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo-badge {
+      background: var(--accent); color: white;
+      font-size: 0.55rem; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      vertical-align: super;
+    }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .api-status {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; color: var(--muted); font-family: var(--font-mono);
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; }
+    .status-dot.connected { background: var(--green); animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .btn-setup {
+      background: var(--ink); color: var(--paper);
+      border: none; border-radius: 8px;
+      padding: 8px 18px; font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; font-family: var(--font-display);
+      transition: all 0.15s; letter-spacing: -0.01em;
+    }
+    .btn-setup:hover { background: var(--accent); transform: translateY(-1px); }
+
+    /* HERO */
+    .hero {
+      max-width: 1200px; margin: 0 auto;
+      padding: 60px 40px 40px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .hero-label {
+      font-family: var(--font-mono); font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--accent); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-label::before { content: '//'; opacity: 0.5; }
+    .hero h1 {
+      font-size: 3.8rem; font-weight: 900; line-height: 0.95;
+      letter-spacing: -0.04em; margin-bottom: 20px;
+    }
+    .hero h1 em {
+      font-family: var(--font-serif); font-style: italic;
+      font-weight: 400; color: var(--accent);
+    }
+    .hero p {
+      font-size: 1rem; color: var(--muted); line-height: 1.6;
+      max-width: 420px; margin-bottom: 28px; font-weight: 400;
+    }
+    .platform-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      border: 1.5px solid var(--border);
+      background: white; color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .pill.tiktok { border-color: #010101; background: #010101; color: white; }
+    .pill.meta { border-color: #0866ff; background: #0866ff; color: white; }
+    .pill.google { border-color: #4285f4; background: white; color: #4285f4; }
+    .pill.shopee { border-color: #ee4d2d; background: #ee4d2d; color: white; }
+
+    /* UPLOAD CARD */
+    .upload-card {
+      background: white;
+      border: 2px solid var(--ink);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+    .upload-card-header {
+      background: var(--ink); color: var(--paper);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .upload-card-title { font-size: 0.85rem; font-weight: 700; letter-spacing: -0.01em; }
+    .upload-card-body { padding: 24px; }
+
+    /* PLATFORM SELECT */
+    .platform-select { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .platform-btn {
+      padding: 10px; border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--paper); cursor: pointer;
+      font-family: var(--font-display); font-size: 0.8rem; font-weight: 700;
+      transition: all 0.15s; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .platform-btn:hover { border-color: var(--ink); background: var(--paper2); }
+    .platform-btn.selected { border-color: var(--ink); background: var(--ink); color: white; }
+
+    /* DROP ZONE */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: var(--paper);
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: #fff5f2;
+    }
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 2rem; margin-bottom: 8px; }
+    .drop-text { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+    .drop-text strong { color: var(--ink); }
+
+    .file-selected {
+      background: var(--green-bg);
+      border: 1.5px solid var(--green);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: none; align-items: center; gap: 10px;
+      margin-top: 12px; font-size: 0.82rem;
+    }
+    .file-selected.show { display: flex; }
+    .file-name { font-family: var(--font-mono); font-size: 0.75rem; flex: 1; color: var(--green); }
+
+    /* PERIOD SELECT */
+    .period-row { display: flex; gap: 8px; margin-top: 12px; }
+    .period-btn {
+      flex: 1; padding: 8px; border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--paper); cursor: pointer;
+      font-family: var(--font-display); font-size: 0.75rem; font-weight: 600;
+      transition: all 0.15s; text-align: center;
+    }
+    .period-btn:hover { border-color: var(--ink); }
+    .period-btn.selected { border-color: var(--accent); background: var(--accent); color: white; }
+
+    .analyze-btn {
+      width: 100%; margin-top: 16px;
+      background: var(--accent); color: white;
+      border: 2px solid var(--accent);
+      border-radius: 12px; padding: 14px;
+      font-family: var(--font-display); font-size: 1rem; font-weight: 800;
+      cursor: pointer; transition: all 0.15s; letter-spacing: -0.02em;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .analyze-btn:hover:not(:disabled) { background: #e03d00; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,69,0,0.3); }
+    .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* MAIN CONTENT */
+    .main-content { max-width: 1200px; margin: 0 auto; padding: 0 40px 80px; }
+
+    /* LOADING */
+    .loading-section {
+      display: none; text-align: center; padding: 60px 20px;
+    }
+    .loading-section.show { display: block; }
+    .loading-spinner {
+      width: 48px; height: 48px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-steps { display: flex; flex-direction: column; gap: 8px; max-width: 300px; margin: 0 auto; }
+    .loading-step {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.82rem; color: var(--muted); text-align: left;
+      padding: 8px 12px; border-radius: 8px; transition: all 0.3s;
+    }
+    .loading-step.active { color: var(--ink); background: white; font-weight: 600; }
+    .loading-step.done { color: var(--green); }
+    .step-icon { width: 18px; text-align: center; }
+
+    /* RESULTS */
+    .results-section { display: none; }
+    .results-section.show { display: block; animation: fadeUp 0.4s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    .results-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; padding-bottom: 20px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .results-title { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; }
+    .results-meta { font-size: 0.78rem; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; }
+    .reset-btn {
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 8px 16px;
+      font-family: var(--font-display); font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; color: var(--ink);
+    }
+    .reset-btn:hover { border-color: var(--ink); background: var(--paper2); }
+
+    /* SCORE CARD */
+    .score-banner {
+      background: var(--ink); color: var(--paper);
+      border-radius: 16px; padding: 28px 32px;
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 32px; align-items: center; margin-bottom: 24px;
+    }
+    .score-circle {
+      width: 80px; height: 80px; border-radius: 50%;
+      border: 3px solid var(--accent);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .score-num { font-size: 1.8rem; font-weight: 900; color: var(--accent); line-height: 1; }
+    .score-label { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+    .score-summary h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.02em; }
+    .score-summary p { font-size: 0.85rem; opacity: 0.7; line-height: 1.5; }
+    .score-grade { font-size: 3.5rem; font-weight: 900; font-family: var(--font-serif); font-style: italic; color: var(--accent); }
+
+    /* METRICS ROW */
+    .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .metric-card {
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 18px;
+      transition: all 0.15s;
+    }
+    .metric-card:hover { border-color: var(--ink); transform: translateY(-2px); }
+    .metric-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; font-family: var(--font-mono); }
+    .metric-val { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.03em; color: var(--ink); }
+    .metric-val.good { color: var(--green); }
+    .metric-val.bad { color: var(--red); }
+    .metric-val.warn { color: var(--gold); }
+    .metric-sub { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+    /* ANALYSIS GRID */
+    .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .analysis-grid { grid-template-columns: 1fr; } }
+
+    .analysis-card {
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .analysis-card-header {
+      padding: 14px 20px; border-bottom: 1.5px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .analysis-card-icon { font-size: 1.1rem; }
+    .analysis-card-title { font-size: 0.85rem; font-weight: 800; letter-spacing: -0.01em; }
+    .analysis-card-body { padding: 20px; }
+
+    /* RECOMMENDATION ITEMS */
+    .rec-list { display: flex; flex-direction: column; gap: 10px; }
+    .rec-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 14px; border-radius: 10px;
+      font-size: 0.82rem; line-height: 1.5;
+    }
+    .rec-item.stop { background: var(--red-bg); border-left: 3px solid var(--red); }
+    .rec-item.scale { background: var(--green-bg); border-left: 3px solid var(--green); }
+    .rec-item.optimize { background: var(--gold-bg); border-left: 3px solid var(--gold); }
+    .rec-item.info { background: var(--paper2); border-left: 3px solid var(--muted); }
+    .rec-badge {
+      font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px;
+      white-space: nowrap; margin-top: 1px; font-family: var(--font-mono);
+    }
+    .rec-badge.stop { background: var(--red); color: white; }
+    .rec-badge.scale { background: var(--green); color: white; }
+    .rec-badge.optimize { background: var(--gold); color: white; }
+    .rec-badge.info { background: var(--muted); color: white; }
+
+    /* FORECAST TABLE */
+    .forecast-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .forecast-table th {
+      text-align: left; padding: 8px 12px;
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); border-bottom: 1.5px solid var(--border);
+      font-family: var(--font-mono);
+    }
+    .forecast-table td { padding: 10px 12px; border-bottom: 1px solid var(--paper2); }
+    .forecast-table tr:last-child td { border-bottom: none; }
+    .forecast-table tr:hover td { background: var(--paper); }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; font-family: var(--font-mono); }
+    .tag-up { background: var(--green-bg); color: var(--green); }
+    .tag-down { background: var(--red-bg); color: var(--red); }
+    .tag-hold { background: var(--gold-bg); color: var(--gold); }
+
+    /* AI INSIGHT FULL WIDTH */
+    .ai-insight-card {
+      background: var(--ink); color: var(--paper);
+      border-radius: 16px; padding: 28px 32px; margin-bottom: 24px;
+    }
+    .ai-insight-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    }
+    .ai-insight-header h3 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
+    .ai-tag {
+      background: var(--accent); color: white;
+      font-size: 0.6rem; font-weight: 800; padding: 2px 8px;
+      border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .ai-insight-body {
+      font-size: 0.88rem; line-height: 1.8; opacity: 0.85;
+      white-space: pre-wrap; font-family: var(--font-display); font-weight: 400;
+    }
+
+    /* BUDGET ALLOCATION */
+    .budget-bars { display: flex; flex-direction: column; gap: 12px; }
+    .budget-row { display: flex; flex-direction: column; gap: 4px; }
+    .budget-row-top { display: flex; justify-content: space-between; font-size: 0.78rem; }
+    .budget-name { font-weight: 700; }
+    .budget-pct { font-family: var(--font-mono); color: var(--muted); font-size: 0.72rem; }
+    .budget-track { height: 8px; background: var(--paper2); border-radius: 999px; overflow: hidden; }
+    .budget-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+
+    /* SETUP MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); z-index: 1000;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--paper); border: 2px solid var(--ink);
+      border-radius: 20px; padding: 36px;
+      max-width: 480px; width: 100%;
+      box-shadow: 8px 8px 0 var(--ink);
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+    .modal h2 { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .modal p { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .modal input {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-family: var(--font-mono); font-size: 0.82rem;
+      background: white; color: var(--ink); outline: none;
+      transition: border-color 0.15s;
+    }
+    .modal input:focus { border-color: var(--accent); }
+    .modal-hint { font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+    .modal-hint a { color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-save {
+      flex: 1; background: var(--ink); color: var(--paper);
+      border: none; border-radius: 10px; padding: 12px;
+      font-family: var(--font-display); font-size: 0.9rem; font-weight: 800;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .modal-save:hover { background: var(--accent); }
+    .modal-cancel {
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 20px;
+      font-family: var(--font-display); font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; color: var(--ink); transition: all 0.15s;
+    }
+    .modal-cancel:hover { border-color: var(--ink); }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--ink); color: var(--paper);
+      border-radius: 12px; padding: 14px 20px;
+      font-size: 0.82rem; font-weight: 500;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+      animation: toastIn 0.3s ease;
+      display: flex; align-items: center; gap: 10px;
+    }
+    @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    /* SAMPLE DATA NOTICE */
+    .sample-notice {
+      background: var(--gold-bg); border: 1.5px solid var(--gold);
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 0.78rem; color: var(--gold); margin-top: 10px; display: none;
+    }
+    .sample-notice.show { display: block; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 32px; padding: 32px 20px 24px; }
+      .hero h1 { font-size: 2.8rem; }
+      .main-content { padding: 0 20px 60px; }
+      header { padding: 0 20px; }
+      .score-banner { grid-template-columns: auto 1fr; }
+      .score-grade { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="setupModal">
+  <div class="modal">
+    <h2>⚙️ Setup API Key</h2>
+    <p>AdsIQ menggunakan Claude AI untuk analisis mendalam. Masukkan API key kamu dari Anthropic. Key disimpan di browser kamu saja — tidak dikirim ke server manapun.</p>
+    <label>ANTHROPIC API KEY</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    <div class="modal-hint">
+      Belum punya API key? Daftar gratis di <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br/>
+      Setiap analisis menggunakan ~$0.01–0.03 kredit API.
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeSetup()">Batal</button>
+      <button class="modal-save" onclick="saveApiKey()">Simpan & Mulai</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">AdsIQ <span class="logo-badge">Beta</span></div>
+    <div class="header-right">
+      <div class="api-status">
+        <div class="status-dot connected" id="statusDot"></div>
+        <span id="statusText">AI siap digunakan ✦</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO + UPLOAD -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-label">AI Ads Analyzer</div>
+    <h1>Iklan lebih <em>cerdas</em>, hasil lebih nyata.</h1>
+    <p>Upload laporan iklan kamu, AdsIQ akan analisis performa, deteksi iklan yang harus dimatikan, dan kasih rekomendasi actionable — dalam hitungan detik.</p>
+    <div class="platform-pills">
+      <span class="pill tiktok">▶ TikTok Ads</span>
+      <span class="pill meta">f Meta Ads</span>
+      <span class="pill google">G Google Ads</span>
+      <span class="pill shopee">🛒 Shopee Ads</span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="upload-card">
+      <div class="upload-card-header">
+        <span class="upload-card-title">📊 Analisis Baru</span>
+        <span style="font-size:0.7rem;opacity:0.5;font-family:var(--font-mono)">CSV / XLSX</span>
+      </div>
+      <div class="upload-card-body">
+
+        <!-- PLATFORM SELECT -->
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;color:var(--muted)">Pilih Platform</div>
+        <div class="platform-select">
+          <button class="platform-btn selected" onclick="selectPlatform('tiktok',this)">▶ TikTok Ads</button>
+          <button class="platform-btn" onclick="selectPlatform('meta',this)">f Meta Ads</button>
+          <button class="platform-btn" onclick="selectPlatform('google',this)">G Google Ads</button>
+          <button class="platform-btn" onclick="selectPlatform('shopee',this)">🛒 Shopee Ads</button>
+        </div>
+
+        <!-- PERIOD -->
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;color:var(--muted)">Periode Data</div>
+        <div class="period-row">
+          <button class="period-btn" onclick="selectPeriod('7',this)">7 Hari</button>
+          <button class="period-btn selected" onclick="selectPeriod('30',this)">30 Hari</button>
+          <button class="period-btn" onclick="selectPeriod('90',this)">90 Hari</button>
+        </div>
+
+        <!-- DROP ZONE -->
+        <div style="margin-top:14px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;color:var(--muted)">Upload Laporan</div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" onchange="handleFile(this)"/>
+          <div class="drop-icon">📂</div>
+          <div class="drop-text">
+            <strong>Drag & drop file di sini</strong><br/>
+            atau klik untuk pilih file<br/>
+            <span style="font-size:0.7rem">CSV, XLSX · Laporan dari dashboard iklan</span>
+          </div>
+        </div>
+
+        <div class="file-selected" id="fileSelected">
+          <span>✅</span>
+          <span class="file-name" id="fileName">—</span>
+          <button onclick="clearFile()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:0.8rem">✕</button>
+        </div>
+
+        <div class="sample-notice" id="sampleNotice">
+          💡 Tidak punya file? Klik <strong>Analisis Sekarang</strong> — AdsIQ akan pakai data sampel untuk demo.
+        </div>
+
+        <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()">
+          ⚡ Analisis Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- LOADING -->
+  <div class="loading-section" id="loadingSection">
+    <div class="loading-spinner"></div>
+    <div style="font-size:1rem;font-weight:800;margin-bottom:20px;letter-spacing:-0.02em">Sedang menganalisis data iklan kamu...</div>
+    <div class="loading-steps">
+      <div class="loading-step active" id="step1"><span class="step-icon">📂</span> Membaca & parsing data CSV</div>
+      <div class="loading-step" id="step2"><span class="step-icon">🧮</span> Menghitung metrik performa</div>
+      <div class="loading-step" id="step3"><span class="step-icon">🤖</span> AI menganalisis campaign</div>
+      <div class="loading-step" id="step4"><span class="step-icon">📋</span> Menyusun rekomendasi</div>
+      <div class="loading-step" id="step5"><span class="step-icon">✅</span> Selesai!</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-section" id="resultsSection">
+
+    <div class="results-header">
+      <div>
+        <div class="results-title" id="resultsTitle">Analisis Selesai</div>
+        <div class="results-meta" id="resultsMeta">—</div>
+      </div>
+      <button class="reset-btn" onclick="resetAll()">← Analisis Baru</button>
+    </div>
+
+    <!-- SCORE BANNER -->
+    <div class="score-banner" id="scoreBanner">
+      <div class="score-circle">
+        <div class="score-num" id="scoreNum">—</div>
+        <div class="score-label">Score</div>
+      </div>
+      <div class="score-summary">
+        <h2 id="scoreTitle">—</h2>
+        <p id="scoreDesc">—</p>
+      </div>
+      <div class="score-grade" id="scoreGrade">—</div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-row" id="metricsRow"></div>
+
+    <!-- AI FULL INSIGHT -->
+    <div class="ai-insight-card" id="aiInsightCard">
+      <div class="ai-insight-header">
+        <h3>Analisis Mendalam dari AI</h3>
+        <span class="ai-tag">Claude AI</span>
+      </div>
+      <div class="ai-insight-body" id="aiInsightBody">—</div>
+    </div>
+
+    <!-- ANALYSIS GRID -->
+    <div class="analysis-grid">
+
+      <!-- RECOMMENDATIONS -->
+      <div class="analysis-card">
+        <div class="analysis-card-header">
+          <span class="analysis-card-icon">🎯</span>
+          <span class="analysis-card-title">Rekomendasi Actionable</span>
+        </div>
+        <div class="analysis-card-body">
+          <div class="rec-list" id="recList"></div>
+        </div>
+      </div>
+
+      <!-- BUDGET ALLOCATION -->
+      <div class="analysis-card">
+        <div class="analysis-card-header">
+          <span class="analysis-card-icon">💰</span>
+          <span class="analysis-card-title">Alokasi Budget yang Disarankan</span>
+        </div>
+        <div class="analysis-card-body">
+          <div class="budget-bars" id="budgetBars"></div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGN TABLE -->
+      <div class="analysis-card" style="grid-column: 1 / -1;">
+        <div class="analysis-card-header">
+          <span class="analysis-card-icon">📈</span>
+          <span class="analysis-card-title">Detail & Forecast per Campaign</span>
+        </div>
+        <div class="analysis-card-body" style="padding:0;overflow-x:auto;">
+          <table class="forecast-table" id="forecastTable">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Spend</th>
+                <th>ROAS</th>
+                <th>CTR</th>
+                <th>CPC</th>
+                <th>Konversi</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="forecastBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let selectedPlatform = 'tiktok';
+let selectedPeriod = '30';
+let uploadedFile = null;
+let uploadedData = null;
+let apiKey = localStorage.getItem('adsiq_apikey') || '';
+
+// ============================================================
+// SETUP
+// ============================================================
+function openSetup() { document.getElementById('setupModal').classList.add('open'); document.getElementById('apiKeyInput').value = apiKey; }
+function closeSetup() { document.getElementById('setupModal').classList.remove('open'); }
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant')) { showToast('❌ Format API key tidak valid'); return; }
+  apiKey = key;
+  localStorage.setItem('adsiq_apikey', key);
+  updateApiStatus(true);
+  closeSetup();
+  showToast('✅ API key tersimpan!');
+}
+function updateApiStatus(connected) {
+  document.getElementById('statusDot').className = 'status-dot' + (connected ? ' connected' : '');
+  document.getElementById('statusText').textContent = connected ? 'AI siap digunakan' : 'API belum tersambung';
+}
+
+// ============================================================
+// PLATFORM & PERIOD
+// ============================================================
+function selectPlatform(p, btn) {
+  selectedPlatform = p;
+  document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function selectPeriod(p, btn) {
+  selectedPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  uploadedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSelected').classList.add('show');
+  document.getElementById('sampleNotice').classList.remove('show');
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedData = e.target.result;
+  };
+  reader.readAsText(file);
+}
+function clearFile() {
+  uploadedFile = null; uploadedData = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileSelected').classList.remove('show');
+  document.getElementById('sampleNotice').classList.add('show');
+}
+
+// Drag & drop
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById('fileInput').files = e.dataTransfer.files; handleFile(document.getElementById('fileInput')); }
+});
+
+// ============================================================
+// SAMPLE DATA GENERATOR
+// ============================================================
+function generateSampleData(platform, period) {
+  const platforms = {
+    tiktok: { name: 'TikTok Ads', campaigns: ['Promo Lebaran - Video A', 'Brand Awareness Q1', 'Retargeting - Checkout', 'New Product Launch', 'Influencer Collab'] },
+    meta: { name: 'Meta Ads', campaigns: ['Facebook Lead Gen', 'Instagram Story - Sale', 'Retargeting Pixel', 'Lookalike Audience', 'Engagement Campaign'] },
+    google: { name: 'Google Ads', campaigns: ['Search - Brand', 'Shopping Campaign', 'Display Remarketing', 'YouTube PreRoll', 'Performance Max'] },
+    shopee: { name: 'Shopee Ads', campaigns: ['Keyword Ads - Utama', 'Discovery Ads', 'Flash Sale Boost', 'Shop Ads', 'Product Search'] },
+  };
+  const p = platforms[platform];
+  return {
+    platform: p.name,
+    period: `${period} hari terakhir`,
+    totalSpend: Math.round(8500000 + Math.random() * 6000000),
+    totalRevenue: Math.round(28000000 + Math.random() * 20000000),
+    totalImpressions: Math.round(1200000 + Math.random() * 800000),
+    totalClicks: Math.round(24000 + Math.random() * 16000),
+    totalConversions: Math.round(380 + Math.random() * 220),
+    campaigns: p.campaigns.map((name, i) => {
+      const spend = Math.round((800000 + Math.random() * 2400000));
+      const revenue = Math.round(spend * (0.8 + Math.random() * 4.5));
+      const impressions = Math.round(80000 + Math.random() * 400000);
+      const clicks = Math.round(impressions * (0.01 + Math.random() * 0.05));
+      const conversions = Math.round(clicks * (0.01 + Math.random() * 0.08));
+      const cpc = Math.round(spend / clicks);
+      return { name, spend, revenue, impressions, clicks, conversions, cpc, roas: revenue/spend, ctr: (clicks/impressions*100) };
+    })
+  };
+}
+
+// ============================================================
+// PARSE CSV
+// ============================================================
+function parseCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return null;
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i]);
+    return obj;
+  });
+  // Try to extract key metrics
+  const totalSpend = rows.reduce((s, r) => s + parseFloat(r.spend || r.cost || r.amount_spent || 0), 0);
+  const totalRevenue = rows.reduce((s, r) => s + parseFloat(r.revenue || r.purchase_value || r.conversion_value || 0), 0);
+  const totalClicks = rows.reduce((s, r) => s + parseFloat(r.clicks || r.link_clicks || 0), 0);
+  const totalImpressions = rows.reduce((s, r) => s + parseFloat(r.impressions || r.reach || 0), 0);
+  const totalConversions = rows.reduce((s, r) => s + parseFloat(r.conversions || r.purchases || r.results || 0), 0);
+
+  const campaigns = rows.slice(0, 10).map(r => ({
+    name: r.campaign || r.campaign_name || r.ad_name || r.name || 'Campaign',
+    spend: parseFloat(r.spend || r.cost || 0),
+    revenue: parseFloat(r.revenue || r.conversion_value || 0),
+    impressions: parseFloat(r.impressions || 0),
+    clicks: parseFloat(r.clicks || r.link_clicks || 0),
+    conversions: parseFloat(r.conversions || r.purchases || 0),
+    cpc: parseFloat(r.cpc || 0) || (parseFloat(r.spend || 0) / Math.max(parseFloat(r.clicks || 1), 1)),
+    roas: parseFloat(r.roas || 0) || (parseFloat(r.revenue || 0) / Math.max(parseFloat(r.spend || 1), 1)),
+    ctr: parseFloat(r.ctr || 0) || (parseFloat(r.clicks || 0) / Math.max(parseFloat(r.impressions || 1), 1) * 100),
+  }));
+
+  return { platform: selectedPlatform.toUpperCase(), period: `${selectedPeriod} hari`, totalSpend, totalRevenue, totalClicks, totalImpressions, totalConversions, campaigns };
+}
+
+// ============================================================
+// ANALYSIS
+// ============================================================
+async function startAnalysis() {
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+
+  let data;
+  if (uploadedData) {
+    data = parseCSV(uploadedData) || generateSampleData(selectedPlatform, selectedPeriod);
+    data.isReal = true;
+  } else {
+    data = generateSampleData(selectedPlatform, selectedPeriod);
+    data.isReal = false;
+  }
+
+  // Show loading
+  document.getElementById('loadingSection').classList.add('show');
+  document.getElementById('resultsSection').classList.remove('show');
+  window.scrollTo({top: document.getElementById('loadingSection').offsetTop - 100, behavior: 'smooth'});
+
+  // Animate steps
+  const steps = ['step1','step2','step3','step4','step5'];
+  const delays = [0, 600, 1200, 0, 0];
+
+  for (let i = 0; i < 2; i++) {
+    await delay(delays[i] || 600);
+    document.getElementById(steps[i]).classList.remove('active');
+    document.getElementById(steps[i]).classList.add('done');
+    if (i + 1 < steps.length) document.getElementById(steps[i+1]).classList.add('active');
+  }
+
+  // Call AI via server
+  let aiAnalysis;
+  try {
+    aiAnalysis = await callClaudeAPI(data);
+  } catch (e) {
+    console.warn('AI call failed, using fallback:', e.message);
+    aiAnalysis = generateFallbackAnalysis(data);
+  }
+
+  // Finish steps
+  await delay(400);
+  document.getElementById('step3').classList.remove('active'); document.getElementById('step3').classList.add('done');
+  document.getElementById('step4').classList.add('active');
+  await delay(300);
+  document.getElementById('step4').classList.remove('active'); document.getElementById('step4').classList.add('done');
+  document.getElementById('step5').classList.add('active');
+  await delay(400);
+
+  document.getElementById('loadingSection').classList.remove('show');
+  renderResults(data, aiAnalysis);
+  btn.disabled = false;
+
+  // Reset loading steps
+  steps.forEach(s => { document.getElementById(s).classList.remove('active','done'); });
+  document.getElementById('step1').classList.add('active');
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// CLAUDE API CALL
+// ============================================================
+async function callClaudeAPI(data) {
+  const platformNames = { tiktok: 'TikTok Ads', meta: 'Meta Ads (Facebook/Instagram)', google: 'Google Ads', shopee: 'Shopee Ads' };
+  const prompt = `Kamu adalah seorang expert digital advertising consultant Indonesia dengan pengalaman 10+ tahun mengelola campaign iklan untuk brand lokal dan internasional.
+
+Berikut data performa iklan dari ${data.platform || platformNames[selectedPlatform]}:
+- Periode: ${data.period}
+- Total Budget Terpakai: Rp ${data.totalSpend?.toLocaleString('id-ID')}
+- Total Revenue/Hasil: Rp ${data.totalRevenue?.toLocaleString('id-ID')}
+- ROAS Keseluruhan: ${(data.totalRevenue/data.totalSpend).toFixed(2)}x
+- Total Impressions: ${data.totalImpressions?.toLocaleString('id-ID')}
+- Total Clicks: ${data.totalClicks?.toLocaleString('id-ID')}
+- CTR: ${(data.totalClicks/data.totalImpressions*100).toFixed(2)}%
+- Total Konversi: ${data.totalConversions}
+- CPA: Rp ${Math.round(data.totalSpend/data.totalConversions).toLocaleString('id-ID')}
+
+Detail Campaign:
+${data.campaigns.map(c => `• ${c.name}: Spend Rp ${c.spend?.toLocaleString('id-ID')}, ROAS ${c.roas?.toFixed(2)}x, CTR ${c.ctr?.toFixed(2)}%, CPC Rp ${c.cpc?.toLocaleString('id-ID')}, Konversi ${c.conversions}`).join('\n')}
+
+Berikan analisis mendalam dalam format berikut (gunakan Bahasa Indonesia yang profesional tapi mudah dipahami):
+
+1. KESIMPULAN EKSEKUTIF (2-3 kalimat tentang kondisi keseluruhan campaign)
+2. TEMUAN KRITIS (3-4 poin masalah atau peluang penting yang ditemukan)
+3. STRATEGI PRIORITAS (3 langkah konkret yang harus dilakukan minggu ini)
+4. OUTLOOK & FORECAST (prediksi hasil jika rekomendasi dijalankan)
+
+Berikan analisis yang spesifik, actionable, dan berbasis data. Jangan terlalu panjang — maksimal 350 kata total.`;
+
+  // Panggil Vercel Function — API key aman di server
+  const response = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error || 'Server error');
+  }
+  const result = await response.json();
+  return result.result;
+}
+
+// ============================================================
+// FALLBACK ANALYSIS (tanpa API key)
+// ============================================================
+function generateFallbackAnalysis(data) {
+  const roas = data.totalRevenue / data.totalSpend;
+  const ctr = (data.totalClicks / data.totalImpressions * 100);
+  const cpa = data.totalSpend / data.totalConversions;
+  const bestCampaign = [...data.campaigns].sort((a,b) => b.roas - a.roas)[0];
+  const worstCampaign = [...data.campaigns].sort((a,b) => a.roas - b.roas)[0];
+
+  return `1. KESIMPULAN EKSEKUTIF
+Campaign kamu menunjukkan ROAS ${roas.toFixed(2)}x dengan CTR ${ctr.toFixed(2)}% dalam periode ${data.period}. ${roas >= 3 ? 'Secara keseluruhan performa cukup solid, ada peluang untuk scaling lebih agresif.' : roas >= 1.5 ? 'Performa masih bisa dioptimalkan — beberapa campaign perlu penyesuaian segera.' : 'Performa belum optimal, perlu evaluasi strategi secara menyeluruh sebelum menambah budget.'}
+
+2. TEMUAN KRITIS
+• Campaign "${bestCampaign?.name}" adalah top performer dengan ROAS ${bestCampaign?.roas?.toFixed(2)}x — alokasikan lebih banyak budget ke sini.
+• Campaign "${worstCampaign?.name}" dengan ROAS ${worstCampaign?.roas?.toFixed(2)}x perlu dievaluasi atau dihentikan jika tidak ada perbaikan dalam 3 hari.
+• CTR ${ctr.toFixed(2)}% ${ctr < 1 ? 'di bawah rata-rata industri — creative perlu direfresh segera.' : ctr < 2 ? 'cukup baik, tapi masih ada ruang untuk optimasi audience targeting.' : 'sangat baik — pertahankan format creative yang sedang berjalan.'}
+• CPA saat ini Rp ${Math.round(cpa).toLocaleString('id-ID')} — ${cpa < 50000 ? 'efisien, fokus pada scaling.' : 'perlu diturunkan dengan A/B test landing page dan audience.'}
+
+3. STRATEGI PRIORITAS MINGGU INI
+• Segera matikan atau kurangi budget campaign dengan ROAS di bawah 1.5x, realokasikan ke campaign terbaik.
+• Lakukan A/B test 2-3 variasi creative baru untuk campaign dengan CTR rendah.
+• Sempitkan audience targeting berdasarkan data konversi — gunakan Lookalike dari customer yang sudah convert.
+
+4. OUTLOOK & FORECAST
+Jika rekomendasi dijalankan dalam 7-14 hari ke depan, estimasi peningkatan ROAS sebesar 20-35% dan penurunan CPA 15-25%. Dengan budget yang sama, proyeksi konversi bisa naik ${Math.round(data.totalConversions * 0.25)}-${Math.round(data.totalConversions * 0.4)} konversi tambahan per bulan.
+
+⚠️ Catatan: Ini adalah analisis otomatis. Sambungkan API key Claude untuk analisis AI yang lebih mendalam dan akurat.`;
+}
+
+// ============================================================
+// RENDER RESULTS
+// ============================================================
+function renderResults(data, aiText) {
+  const roas = data.totalRevenue / data.totalSpend;
+  const ctr = (data.totalClicks / data.totalImpressions * 100);
+  const cpa = data.totalSpend / data.totalConversions;
+
+  // Score calculation
+  let score = 0;
+  if (roas >= 4) score += 35; else if (roas >= 2.5) score += 25; else if (roas >= 1.5) score += 15; else score += 5;
+  if (ctr >= 2) score += 25; else if (ctr >= 1) score += 18; else score += 8;
+  if (data.totalConversions > 500) score += 20; else if (data.totalConversions > 200) score += 14; else score += 6;
+  score += Math.min(20, Math.round(roas * 3));
+  score = Math.min(99, score);
+
+  const grade = score >= 85 ? 'A+' : score >= 75 ? 'A' : score >= 65 ? 'B' : score >= 50 ? 'C' : 'D';
+  const scoreTitle = score >= 75 ? 'Performa Sangat Baik!' : score >= 60 ? 'Performa Cukup Baik' : 'Perlu Optimasi';
+  const scoreDesc = score >= 75
+    ? 'Campaign kamu berjalan efektif. Fokus pada scaling untuk hasil maksimal.'
+    : score >= 60 ? 'Ada beberapa area yang perlu diperbaiki untuk meningkatkan ROI.'
+    : 'Beberapa campaign perlu dievaluasi ulang segera untuk menghindari pemborosan budget.';
+
+  document.getElementById('resultsTitle').textContent = `Laporan ${data.platform || 'Ads'} — ${data.period}`;
+  document.getElementById('resultsMeta').textContent = `Dianalisis pada ${new Date().toLocaleDateString('id-ID', {weekday:'long', year:'numeric', month:'long', day:'numeric'})} · ${data.isReal ? 'Data real dari file upload' : 'Demo dengan data sampel'}`;
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('scoreTitle').textContent = scoreTitle;
+  document.getElementById('scoreDesc').textContent = scoreDesc;
+  document.getElementById('scoreGrade').textContent = grade;
+
+  // Metrics
+  const metrics = [
+    { label: 'Total Spend', val: 'Rp ' + fmtShort(data.totalSpend), sub: `dari ${data.period}`, cls: '' },
+    { label: 'Total Revenue', val: 'Rp ' + fmtShort(data.totalRevenue), sub: 'hasil iklan', cls: roas > 1 ? 'good' : 'bad' },
+    { label: 'ROAS', val: roas.toFixed(2) + 'x', sub: roas >= 3 ? 'Sangat baik 🔥' : roas >= 1.5 ? 'Cukup baik' : 'Perlu optimasi ⚠️', cls: roas >= 3 ? 'good' : roas >= 1.5 ? 'warn' : 'bad' },
+    { label: 'CTR', val: ctr.toFixed(2) + '%', sub: ctr >= 2 ? 'Di atas rata-rata' : 'Perlu ditingkatkan', cls: ctr >= 2 ? 'good' : ctr >= 1 ? 'warn' : 'bad' },
+    { label: 'Total Konversi', val: data.totalConversions.toLocaleString('id-ID'), sub: 'dalam periode ini', cls: '' },
+    { label: 'CPA', val: 'Rp ' + fmtShort(cpa), sub: 'biaya per konversi', cls: cpa < 50000 ? 'good' : cpa < 150000 ? 'warn' : 'bad' },
+  ];
+  document.getElementById('metricsRow').innerHTML = metrics.map(m => `
+    <div class="metric-card">
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-val ${m.cls}">${m.val}</div>
+      <div class="metric-sub">${m.sub}</div>
+    </div>`).join('');
+
+  // AI Insight
+  document.getElementById('aiInsightBody').textContent = aiText;
+
+  // Recommendations
+  const recs = [];
+  const sorted = [...data.campaigns].sort((a,b) => b.roas - a.roas);
+  const best = sorted.slice(0, 2);
+  const worst = sorted.slice(-2);
+  best.forEach(c => recs.push({ type: 'scale', badge: 'SCALE UP', text: `"${c.name}" — ROAS ${c.roas.toFixed(2)}x. Naikkan budget 20-30% minggu ini. Campaign ini menghasilkan yang terbaik.` }));
+  worst.forEach(c => { if (c.roas < 1.5) recs.push({ type: c.roas < 1 ? 'stop' : 'optimize', badge: c.roas < 1 ? 'MATIKAN' : 'OPTIMASI', text: `"${c.name}" — ROAS ${c.roas.toFixed(2)}x. ${c.roas < 1 ? 'Campaign ini rugi, segera matikan dan realokasikan budget.' : 'Perlu perbaikan creative & audience targeting dalam 3 hari ke depan.'}` }); });
+  if (ctr < 1) recs.push({ type: 'optimize', badge: 'CREATIVE', text: `CTR keseluruhan ${ctr.toFixed(2)}% terlalu rendah. Buat 2-3 variasi creative baru, fokus pada 3 detik pertama video.` });
+  recs.push({ type: 'info', badge: 'INSIGHT', text: `Gunakan data audience dari campaign terbaik untuk membuat Lookalike Audience di campaign berikutnya.` });
+
+  document.getElementById('recList').innerHTML = recs.slice(0,5).map(r => `
+    <div class="rec-item ${r.type}">
+      <span class="rec-badge ${r.type}">${r.badge}</span>
+      <span>${r.text}</span>
+    </div>`).join('');
+
+  // Budget bars
+  const totalBudgetRec = data.campaigns.reduce((s,c) => s + c.spend, 0);
+  const budgetAlloc = data.campaigns.map(c => ({
+    name: c.name.length > 22 ? c.name.slice(0,22) + '…' : c.name,
+    pct: Math.round((c.roas / data.campaigns.reduce((s,x) => s + x.roas, 0)) * 100),
+    color: c.roas >= 3 ? '#1a7a4a' : c.roas >= 1.5 ? '#b8860b' : '#c0392b',
+  }));
+  document.getElementById('budgetBars').innerHTML = budgetAlloc.map(b => `
+    <div class="budget-row">
+      <div class="budget-row-top">
+        <span class="budget-name">${b.name}</span>
+        <span class="budget-pct">${b.pct}%</span>
+      </div>
+      <div class="budget-track">
+        <div class="budget-fill" style="width:${b.pct}%;background:${b.color}"></div>
+      </div>
+    </div>`).join('');
+
+  // Forecast table
+  const actions = { 3: { tag: 'tag-up', text: 'Scale Up' }, 1.5: { tag: 'tag-hold', text: 'Optimasi' }, 0: { tag: 'tag-down', text: 'Matikan' } };
+  document.getElementById('forecastBody').innerHTML = data.campaigns.map(c => {
+    const actionKey = c.roas >= 3 ? 3 : c.roas >= 1.5 ? 1.5 : 0;
+    const action = actions[actionKey];
+    return `<tr>
+      <td style="font-weight:700;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</td>
+      <td>Rp ${fmtShort(c.spend)}</td>
+      <td style="font-weight:700;color:${c.roas >= 3 ? 'var(--green)' : c.roas >= 1.5 ? 'var(--gold)' : 'var(--red)'}">${c.roas.toFixed(2)}x</td>
+      <td>${c.ctr.toFixed(2)}%</td>
+      <td>Rp ${fmtShort(c.cpc)}</td>
+      <td>${Math.round(c.conversions)}</td>
+      <td><span class="tag ${action.tag}">${action.text}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('resultsSection').classList.add('show');
+  window.scrollTo({ top: document.getElementById('resultsSection').offsetTop - 80, behavior: 'smooth' });
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function fmtShort(n) {
+  if (!n && n !== 0) return '—';
+  if (Math.abs(n) >= 1e9) return (n/1e9).toFixed(1) + ' M';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + ' jt';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(0) + ' rb';
+  return Math.round(n).toString();
+}
+
+function resetAll() {
+  document.getElementById('resultsSection').classList.remove('show');
+  document.getElementById('loadingSection').classList.remove('show');
+  clearFile();
+  document.getElementById('sampleNotice').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sampleNotice').classList.add('show');
+});
+</script>
+</body>
+</html>
